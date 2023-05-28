@@ -14,4 +14,6 @@ RUN npm install -d ts-node@10.9.1
 
 COPY --chown=node:node ./dist  .
 
-CMD node ./main.js
+# CMD node ./main.js
+
+CMD ls

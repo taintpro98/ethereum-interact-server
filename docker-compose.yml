@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   app:
-    container_name: nekofighting-nest-server
+    container_name: ethereum-interact-server
     build:
       context: ./
       dockerfile: ./docker/nest/Dockerfile
@@ -9,47 +9,64 @@ services:
     command: npm run start:prod
     restart: unless-stopped
     tty: true
+    # volumes:
+    #   - .:/home/node/app
+    #   - /home/node/app/node_modules
     networks:
-      - nekofighting-nest-network
+      - ethereum-interact-network
     depends_on:
       - database
     ports:
       - 5002:5002
+    env_file:
+      - .env
     environment:
-      APP_ENV: dev
+      APP_ENV: prod
       APP_PORT: 5002
       DB_DEBUG: 1
       DB_HOST: database
-      DB_DATABASE: nekofighting
+      DB_DATABASE: ethereum
       DB_USERNAME: root
       DB_PASSWORD: 123456
       DB_PORT: 5432
-      VERIFIED_MESSAGE: ${VERIFIED_MESSAGE}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       TOKEN_SECRET_KEY: ${TOKEN_SECRET_KEY}
-      CACHE_HOST: ${CACHE_HOST}
-      CACHE_PORT: ${CACHE_PORT}
-      CACHE_DATABASE: ${CACHE_DATABASE}
 
   database:
-    container_name: postgres-nekofighting-database
+    container_name: postgres-ethereum-database
     image: postgres:14.1
     restart: unless-stopped
     volumes:
-      - nekofighting-database:/var/lib/postgres
+      - ethereum-database:/var/lib/postgres
       - ./docker/postgres:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_DB: nekofighting
+      POSTGRES_DB: ethereum
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 123456
     ports:
-      - 5430:5432
+      - 5432:5432
     networks:
-      - nekofighting-nest-network
+      - ethereum-interact-network
+
+  redis:
+    container_name: ethereum-interact-redis
+    image: redis
+    restart: unless-stopped
+    ports:
+      - 6383:6379
+    command: redis-server --save 20 1 --loglevel warning
+    networks:
+      - ethereum-interact-network
+    volumes:
+      - neko-ethereum-cache:/data
 
 networks:
-  nekofighting-nest-network:
+  ethereum-interact-network:
     driver: bridge
 
 volumes:
-  nekofighting-database:
+  ethereum-database:
+    driver: local
+  neko-ethereum-cache:
     driver: local
